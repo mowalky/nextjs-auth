@@ -15,26 +15,34 @@ async function handler(req, res) {
     password.trim().length < 7
   ) {
     res.status(422).json({
-      error: "Invalid email or password",
+      message: "Invalid email or password",
     });
     return;
   }
 
   const client = await connectToDatabase();
   const db = client.db();
-
-  const hashedPassword = await hashPassword(password);
-
   const users = db.collection("users");
-  const results = await users.insertOne({
-    email: email,
-    password: hashedPassword,
-  });
 
-  res.status(201).json({
-    message: "User created",
-    userId: results.insertedId,
-  });
+  const existingUser = await users.findOne({ email });
+
+  if (!existingUser) {
+    const hashedPassword = await hashPassword(password);
+
+    const results = await users.insertOne({
+      email: email,
+      password: hashedPassword,
+    });
+
+    res.status(201).json({
+      message: "User created",
+      userId: results.insertedId,
+    });
+  } else {
+    res.status(422).json({
+      message: "User already exists",
+    });
+  }
 }
 
 export default handler;
