@@ -42,6 +42,7 @@ async function handler(req, res) {
     res.status(422).json({
       message: "User already exists",
     });
+    client.close();
   }
 }
 
